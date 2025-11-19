@@ -1,0 +1,56 @@
+name: SonarQube Analysis
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:  
+
+jobs:
+  sonar-scan:
+    name: Run SonarQube Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      # ----------------------------------------
+      # CHECKOUT
+      # ----------------------------------------
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # REQUIRED for PR analysis
+
+      # ----------------------------------------
+      # SETUP JDK 17
+      # ----------------------------------------
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # ----------------------------------------
+      # BUILD (GENERATE BYTECODE + TEST REPORTS)
+      # ----------------------------------------
+      - name: Build with Maven (tests included)
+        run: mvn -B clean verify
+
+      # ----------------------------------------
+      # SONARQUBE SCAN
+      # ----------------------------------------
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      # ----------------------------------------
+      # QUALITY GATE (BLOCK MERGE IF FAILED)
+      # ----------------------------------------
+      - name: SonarQube Quality Gate Check
+        uses: sonarsource/sonarqube-quality-gate-action@v1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        timeout-minutes: 10
