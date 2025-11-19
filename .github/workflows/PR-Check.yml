@@ -1,5 +1,5 @@
 name: SonarQube Analysis
-
+# adding comment to check PR run
 on:
   push:
     branches: [ master ]
