@@ -1,7 +1,11 @@
 name: SonarQube Analysis
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [ master ]
+  pull_request:
+    types: [opened, synchronize, reopened]
+  # workflow_dispatch:
 
 jobs:
   sonar-scan:
